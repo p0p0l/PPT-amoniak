@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presentasi Interaktif: Sensor Gas Amoniak IoT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;600&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* Pengaturan tema Royal Gold */
+        body {
+            background-color: #0a0f2c; /* Biru malam yang pekat */
+            color: #F5F5DC; /* Teks krem yang lembut */
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Cormorant Garamond', serif;
+            color: #FFD700; /* Emas utama */
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .royal-gold-text { color: #FFD700; }
+        .royal-dark-bg { background-color: #1a2349; }
+        .royal-gold-border { border-color: #D4AF37; }
+
+        /* Logo Kustom */
+        .custom-logo {
+            position: fixed;
+            top: 1.5rem;
+            left: 2rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: #00BFFF; /* Biru Neon */
+            z-index: 20;
+            text-shadow: 0 0 5px #00BFFF, 0 0 10px #00BFFF, 0 0 20px #00BFFF;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        /* Struktur utama presentasi */
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 2rem; opacity: 0; visibility: hidden;
+            transition: opacity 0.7s ease-in-out, transform 0.7s ease-in-out;
+            transform: scale(0.95);
+        }
+
+        .slide.active { opacity: 1; visibility: visible; transform: scale(1); }
+
+        /* Styling untuk makhluk penjaga / ikon */
+        .creature {
+            position: absolute; width: 10%; max-width: 100px;
+            opacity: 0.6; filter: drop-shadow(0 0 15px rgba(0, 191, 255, 0.5));
+            transition: transform 0.3s ease;
+        }
+        .creature:hover { transform: scale(1.1); opacity: 0.9; }
+        .creature-left { bottom: 5%; left: 5%; }
+        .creature-right { top: 5%; right: 5%; }
+
+        /* Fitur Interaktif: Tooltip */
+        .tooltip { position: relative; display: inline-block; border-bottom: 2px dotted #D4AF37; cursor: help; }
+        .tooltip .tooltip-text {
+            visibility: hidden; width: 250px; background-color: #1a2349;
+            color: #fff; text-align: center; border-radius: 8px; padding: 8px;
+            position: absolute; z-index: 1; bottom: 125%; left: 50%;
+            margin-left: -125px; opacity: 0; transition: opacity 0.3s;
+            border: 1px solid #D4AF37; font-size: 0.8rem; font-family: 'Inter', sans-serif;
+        }
+        .tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
+        
+        /* Fitur Interaktif: Konverter Bahasa */
+        .language-toggle {
+            background-color: transparent; border: 2px solid #D4AF37;
+            color: #D4AF37; padding: 8px 16px; border-radius: 20px;
+            cursor: pointer; transition: all 0.3s ease;
+            font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 600;
+        }
+        .language-toggle:hover {
+            background-color: #D4AF37; color: #0a0f2c;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        /* Logika Tampilan Bahasa */
+        .text-simplified { display: none; }
+        .text-academic { display: inline; }
+        .simplified-view .text-academic { display: none; }
+        .simplified-view .text-simplified { display: inline; }
+        .simplified-view li .text-academic, li .text-simplified { display: block; }
+        li .text-simplified { display: none; }
+        .simplified-view li .text-simplified { display: block; }
+
+        /* Navigasi */
+        .nav-button {
+            position: fixed; z-index: 10; background-color: rgba(255, 215, 0, 0.8);
+            color: #0a0f2c; border: none; width: 50px; height: 50px;
+            border-radius: 50%; font-size: 2rem; cursor: pointer;
+            transition: all 0.3s ease; display: flex;
+            justify-content: center; align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .nav-button:hover { background-color: #FFD700; transform: scale(1.1); }
+        #prev-btn { left: 2rem; bottom: 2rem; }
+        #next-btn { right: 2rem; bottom: 2rem; }
+        #fullscreen-btn { top: 2rem; right: 2rem; width: 50px; height: 50px; }
+        #fullscreen-btn svg { width: 24px; height: 24px; fill: #0a0f2c; }
+
+        /* Progress Bar */
+        #progress-bar-container {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 8px;
+            background-color: rgba(26, 35, 73, 0.5); z-index: 5;
+        }
+        #progress-bar {
+            width: 0; height: 100%;
+            background: linear-gradient(90deg, #00BFFF, #0077B6);
+            transition: width 0.5s ease;
+        }
+
+        /* Animasi Kustom */
+        .made-by-name { opacity: 0; transform: scale(0.5); animation: pop-out 0.8s forwards ease-out; }
+        .animate-pop-1 { animation-delay: 1.5s; } .animate-pop-2 { animation-delay: 1.8s; }
+        .animate-pop-3 { animation-delay: 2.1s; } .animate-pop-4 { animation-delay: 2.4s; }
+        .animate-pop-5 { animation-delay: 2.7s; }
+        @keyframes pop-out {
+            0% { opacity: 0; transform: scale(0.5); }
+            60% { opacity: 1; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .animate-lecturer-title { animation: slide-in-left 1.2s forwards cubic-bezier(0.25, 1, 0.5, 1); }
+        .animate-lecturer-name { animation: slide-in-right 1.2s forwards cubic-bezier(0.25, 1, 0.5, 1); }
+        @keyframes slide-in-left { from { opacity: 0; transform: translateX(-100%); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slide-in-right { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+        
+        .terima-kasih span {
+            opacity: 0; display: inline-block;
+            animation: slideInFromLeft 0.5s forwards cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        @keyframes slideInFromLeft { from { opacity: 0; transform: translateX(-50px); } to { opacity: 1; transform: translateX(0); } }
+        .terima-kasih span:nth-child(1) { animation-delay: 0.2s; } .terima-kasih span:nth-child(2) { animation-delay: 0.3s; }
+        .terima-kasih span:nth-child(3) { animation-delay: 0.4s; } .terima-kasih span:nth-child(4) { animation-delay: 0.5s; }
+        .terima-kasih span:nth-child(5) { animation-delay: 0.6s; } .terima-kasih span:nth-child(6) { animation-delay: 0.7s; }
+        .terima-kasih span:nth-child(7) { animation-delay: 0.8s; } .terima-kasih span:nth-child(8) { animation-delay: 0.9s; }
+        .terima-kasih span:nth-child(9) { animation-delay: 1.0s; } .terima-kasih span:nth-child(10) { animation-delay: 1.1s; }
+        .terima-kasih span:nth-child(11) { animation-delay: 1.2s; } .terima-kasih span:nth-child(12) { animation-delay: 1.3s; }
+
+        .q-mark { opacity: 0; display: inline-block; animation: pop-q 2.5s infinite; }
+        @keyframes pop-q {
+            0%, 100% { opacity: 0; transform: scale(0.5); }
+            20% { opacity: 1; transform: scale(1); }
+            80% { opacity: 1; transform: scale(1); }
+        }
+        .q-mark:nth-child(1) { animation-delay: 2.0s; } .q-mark:nth-child(2) { animation-delay: 2.2s; }
+        .q-mark:nth-child(3) { animation-delay: 2.4s; }
+    </style>
+</head>
+<body>
+    <div id="custom-logo" class="custom-logo opacity-0">SirkuitIDE</div>
+
+    <svg class="creature creature-left" viewBox="0 0 24 24" fill="url(#blue-gradient)" xmlns="http://www.w3.org/2000/svg"><path d="M21 15.46a1 1 0 0 0-.54-.89l-6-3.46a1 1 0 0 0-1 0l-6 3.46a1 1 0 0 0-.54.89V18a1 1 0 0 0 .54.89l6 3.46a1 1 0 0 0 1 0l6-3.46a1 1 0 0 0 .54-.89zM12 19.92L7.5 17.5l4.5-2.58L16.5 17.5zM17.63 2.5a1 1 0 0 0-1.09.21L12 6.59l-4.54-3.88a1 1 0 0 0-1.41 1.41L10.59 8 6.05 11.88a1 1 0 1 0 1.41 1.41L12 9.41l4.54 3.88a1 1 0 0 0 1.41-1.41L13.41 8l4.54-3.88a1 1 0 0 0-.32-1.62z"></path><defs><linearGradient id="blue-gradient"><stop stop-color="#00BFFF"/><stop offset="1" stop-color="#0077B6"/></linearGradient></defs></svg>
+    <svg class="creature creature-right" viewBox="0 0 24 24" fill="url(#blue-gradient)" xmlns="http://www.w3.org/2000/svg"><path d="M12.23 13.9a3.5 3.5 0 0 0-4.06 4.06A3.5 3.5 0 0 0 11.1 20a1 1 0 0 0 .83-.46l.46-.83.46.83a1 1 0 0 0 .83.46 3.5 3.5 0 0 0 2.93-1.94 3.5 3.5 0 0 0-4.06-4.06zm.94 4.56a1.5 1.5 0 1 1 0-2.12 1.5 1.5 0 0 1 0 2.12zM21 4a1 1 0 0 0-1 1v2.3a7.5 7.5 0 0 0-13.63 4.13 1 1 0 0 0 2 .38 5.5 5.5 0 0 1 10.4-2.47l-1.1.28a1 1 0 1 0 .38 2l2.39-.64a1 1 0 0 0 .61-1.35V5a1 1 0 0 0-1-1z"></path></svg>
+
+    <div id="presentation-container" class="w-full h-screen">
+
+        <div id="slide-1" class="slide active text-center">
+            <h1 class="text-5xl md:text-7xl font-bold tracking-wider">Sensor Gas Amoniak Berbasis IoT</h1>
+            <h2 class="mt-4 text-xl md:text-2xl text-gray-300">Sistem Monitoring Toksisitas Akuakultur</h2>
+            <div class="mt-4 text-lg text-gray-300 overflow-hidden py-2">
+                <div class="flex justify-center items-center flex-nowrap">
+                    <span class="animate-lecturer-title">Dosen Pengampu :&nbsp;</span>
+                    <span class="animate-lecturer-name">Indra Jaya, S.T., M.T.</span>
+                </div>
+            </div>
+            <div class="mt-8">
+                <p class="text-lg text-gray-400">Disusun oleh Kelompok 2:</p>
+                <div class="mt-4 text-xl md:text-2xl space-y-2 text-gray-200">
+                    <p class="made-by-name animate-pop-1">Qaid Iqbal Ahmady</p>
+                    <p class="made-by-name animate-pop-2">Rizki Andika</p>
+                    <p class="made-by-name animate-pop-3">Munazir</p>
+                    <p class="made-by-name animate-pop-4">Muhammad Fajar</p>
+                    <p class="made-by-name animate-pop-5">Syifa Khairi</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="slide-2" class="slide text-center">
+            <h2 class="text-4xl md:text-5xl mb-6">
+                <span class="text-academic">Problem Krusial dalam Akuakultur</span>
+                <span class="text-simplified">Ancaman Tak Terlihat di Kolam Ikan</span>
+            </h2>
+            <div class="max-w-3xl royal-dark-bg p-6 rounded-2xl shadow-2xl border royal-gold-border">
+                <p class="text-lg md:text-xl leading-relaxed">
+                    <span class="text-academic">Amonia (NH₃), produk ekskresi utama ikan, merupakan senyawa toksik dalam bentuk gas tidak terionisasi. Peningkatan konsentrasinya, yang dipengaruhi oleh pH dan suhu, dapat menyebabkan <span class="tooltip">hiperplasia<span class="tooltip-text">Ini adalah kondisi di mana sel-sel insang ikan tumbuh berlebihan dan tidak normal. Akibatnya, insang jadi menebal, membuat ikan sangat sulit untuk bernapas dan mengambil oksigen dari air.</span></span> pada insang, memperlambat pertumbuhan, bahkan memicu mortalitas massal.</span>
+                    <span class="text-simplified">Kotoran ikan menghasilkan gas amonia yang beracun. Anggap saja ini seperti <span class="tooltip">asap knalpot<span class="tooltip-text">Bagi ikan, gas amonia yang larut di air sama berbahayanya dengan asap bagi kita. Gas ini merusak insang dan membuat ikan sulit bernapas.</span></span> di dalam kamar tertutup bagi ikan. Jika terlalu banyak, ikan bisa sakit, stres, dan akhirnya mati.</span>
+                </p>
+            </div>
+            <button class="language-toggle mt-6">Sederhanakan Bahasa</button>
+        </div>
+
+        <div id="slide-3" class="slide text-center">
+            <h2 class="text-4xl md:text-5xl mb-6">
+                <span class="text-academic">Arsitektur Perangkat Keras</span>
+                <span class="text-simplified">Trio Detektif Elektronik</span>
+            </h2>
+            <div class="max-w-5xl grid md:grid-cols-3 gap-6">
+                <div class="royal-dark-bg p-6 rounded-xl border royal-gold-border transform hover:scale-105 transition-transform">
+                    <h3 class="text-2xl mb-2">ESP32</h3>
+                    <p><span class="text-academic"><span class="tooltip">System on Chip (SoC)<span class="tooltip-text">Bayangkan ini seperti 'otak' lengkap dalam satu keping kecil. Isinya sudah ada prosesor, memori, dan Wi-Fi sekaligus, tidak perlu dirakit-rakit lagi.</span></span> yang mengintegrasikan Wi-Fi, Bluetooth, dan ADC 12-bit, berfungsi sebagai unit pemrosesan utama.</span>
+                           <span class="text-simplified"><b>Otak dari alat ini</b>. Komputer super kecil yang sudah punya Wi-Fi untuk mengirim data ke internet.</span></p>
+                </div>
+                <div class="royal-dark-bg p-6 rounded-xl border royal-gold-border transform hover:scale-105 transition-transform">
+                    <h3 class="text-2xl mb-2">MQ-135</h3>
+                    <p><span class="text-academic">Sensor gas oksida logam semikonduktor (MOX) dengan material sensitif <span class="tooltip">SnO₂<span class="tooltip-text">Ini adalah 'bahan' utama di dalam hidung elektronik (sensor). Saat bahan ini 'mencium' gas tertentu (seperti amonia), sifat listriknya berubah, dan itulah cara sensornya bekerja.</span></span> yang resistansinya menurun saat terpapar gas target.</span>
+                           <span class="text-simplified"><b>Hidung elektronik</b> yang sangat peka. Ia bisa 'mencium' keberadaan gas amonia di udara.</span></p>
+                </div>
+                <div class="royal-dark-bg p-6 rounded-xl border royal-gold-border transform hover:scale-105 transition-transform">
+                    <h3 class="text-2xl mb-2">DHT11</h3>
+                    <p><span class="text-academic">Sensor digital untuk mengukur suhu dan kelembaban relatif. Data ini krusial untuk kompensasi dan meningkatkan akurasi sensor gas.</span>
+                           <span class="text-simplified"><b>Pengukur cuaca mini</b>. Ia memastikan si hidung elektronik tidak salah cium saat cuaca panas atau lembab.</span></p>
+                </div>
+            </div>
+            <button class="language-toggle mt-8">Sederhanakan Bahasa</button>
+        </div>
+
+        <div id="slide-4" class="slide text-center">
+            <h2 class="text-4xl md:text-5xl mb-6">
+                <span class="text-academic">Mekanisme Kerja Sistem</span>
+                <span class="text-simplified">Bagaimana Cara Kerjanya?</span>
+            </h2>
+            <div class="max-w-3xl royal-dark-bg p-6 rounded-2xl shadow-2xl border royal-gold-border">
+                <p class="text-lg md:text-xl leading-relaxed">
+                    <span class="text-academic">Sensor MQ-135 mengukur konsentrasi gas berdasarkan <span class="tooltip">rasio resistansi (RS/R₀)<span class="tooltip-text">RS adalah resistansi sensor saat mendeteksi gas, dan R₀ adalah resistansi di udara bersih. Perbandingan keduanya digunakan untuk menghitung konsentrasi gas.</span></span>. Data ini kemudian dikoreksi menggunakan parameter suhu dan kelembaban dari DHT11, lalu diolah oleh ESP32 untuk ditransmisikan ke platform IoT via Wi-Fi sebagai peringatan dini.</span>
+                    <span class="text-simplified">Ini seperti tim detektif: <b>MQ-135</b> mencium 'bau' amonia. <b>DHT11</b> memeriksa 'cuaca' di sekitarnya. Lalu, <b>ESP32</b> menggabungkan kedua petunjuk itu untuk memberikan laporan akurat ke HP kita: "Waspada, udara di kolam mulai tidak sehat!"</span>
+                </p>
+            </div>
+            <button class="language-toggle mt-6">Sederhanakan Bahasa</button>
+        </div>
+
+       <div id="slide-5" class="slide text-center">
+             <h2 class="text-4xl md:text-5xl mb-6">
+                <span class="text-academic">Implementasi Fungsional</span>
+                <span class="text-simplified">Wujud Nyata Alatnya</span>
+            </h2>
+            <div class="max-w-3xl royal-dark-bg p-6 rounded-2xl shadow-2xl border royal-gold-border">
+                
+                <p class="text-lg md:text-xl leading-relaxed">
+                    <span class="text-academic">Sistem fungsional yang mampu mentransmisikan data sensor secara real-time ke dashboard cloud, memungkinkan monitoring jarak jauh dan menjadi sistem peringatan dini yang efektif.</span>
+                    <span class="text-simplified">Alatnya sudah jadi dan berfungsi! Sekarang kita bisa pantau kondisi kolam dari mana saja lewat aplikasi di HP, dan langsung dapat notifikasi kalau ada bahaya.</span>
+                </p>
+            </div>
+             <button class="language-toggle mt-6">Sederhanakan Bahasa</button>
+        </div>
+
+        <div id="slide-6" class="slide text-center">
+            <h2 class="text-4xl md:text-5xl mb-6">Kesimpulan Proyek</h2>
+            <div class="max-w-3xl space-y-4 text-left text-lg">
+                <p>▶ Sistem monitoring amonia berbasis IoT <span class="royal-gold-text">berhasil dirancang</span> dan diimplementasikan secara fungsional.</p>
+                <p>▶ Koreksi data menggunakan suhu dan kelembaban terbukti <span class="royal-gold-text">secara signifikan meningkatkan akurasi</span> pembacaan sensor gas.</p>
+                <p>▶ Alat ini menyediakan <span class="royal-gold-text">solusi peringatan dini yang efektif dan ekonomis</span> bagi para pembudidaya ikan.</p>
+            </div>
+        </div>
+        
+        <div id="slide-7" class="slide text-center">
+            <h2 class="text-4xl md:text-5xl mb-6">
+                <span class="text-academic">Prospek dan Pengembangan</span>
+                <span class="text-simplified">Ide Keren Selanjutnya</span>
+            </h2>
+            <div class="max-w-4xl text-left royal-dark-bg p-8 rounded-2xl border royal-gold-border">
+                <ul class="list-disc list-inside space-y-3 text-lg">
+                    <li>
+                        <span class="text-academic"><strong class="royal-gold-text">Integrasi Aktuator Otomatis:</strong> Mengembangkan sistem untuk mengontrol aerator atau pompa air secara otomatis ketika konsentrasi amonia terdeteksi melebihi ambang batas kritis.</span>
+                        <span class="text-simplified"><strong class="royal-gold-text">Buat Jadi Otomatis:</strong> Jika alat mendeteksi bahaya, ia bisa langsung menyalakan pompa udara atau sirkulasi air sendiri, tanpa perlu disuruh.</span>
+                    </li>
+                    <li>
+                        <span class="text-academic"><strong class="royal-gold-text">Pemanfaatan Machine Learning:</strong> Mengimplementasikan algoritma pembelajaran mesin untuk memprediksi lonjakan amonia berdasarkan pola data historis dan kondisi lingkungan.</span>
+                        <span class="text-simplified"><strong class="royal-gold-text">Jadi Peramal Cuaca Kolam:</strong> Mengajari komputer untuk membaca pola data, sehingga ia bisa memprediksi, "Hati-hati, besok kemungkinan kadar amonia akan naik!"</span>
+                    </li>
+                </ul>
+            </div>
+            <button class="language-toggle mt-8">Sederhanakan Bahasa</button>
+        </div>
+        
+        <div id="slide-8" class="slide text-center">
+            <h1 class="terima-kasih text-6xl md:text-8xl font-bold tracking-wider">
+                <span>T</span><span>e</span><span>r</span><span>i</span><span>m</span><span>a</span><span>&nbsp;</span><span>K</span><span>a</span><span>s</span><span>i</span><span>h</span>
+            </h1>
+            <div class="bertanya mt-8 text-3xl text-gray-400">
+                Ada Pertanyaan<span class="q-mark">?</span><span class="q-mark">?</span><span class="q-mark">?</span>
+            </div>
+            <p id="warning-message" class="absolute bottom-20 mt-10 text-2xl text-red-500 font-bold opacity-0 transition-opacity duration-1000">
+                Jangan nanya pakai AI ya! ;)
+            </p>
+        </div>
+
+    </div>
+
+    <button id="fullscreen-btn" class="nav-button">
+        <svg class="fullscreen-enter-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 2h-2v3h-3v2h5v-5zm-3-4V5h-2v5h5V7h-3z"/></svg>
+        <svg class="fullscreen-exit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="display: none;"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>
+    </button>
+    <button id="prev-btn" class="nav-button">&#10094;</button>
+    <button id="next-btn" class="nav-button">&#10095;</button>
+    <div id="progress-bar-container">
+        <div id="progress-bar"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const slides = document.querySelectorAll('.slide');
+            const totalSlides = slides.length;
+            let currentSlide = 0;
+            let warningTimeout;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const progressBar = document.getElementById('progress-bar');
+            const fullscreenBtn = document.getElementById('fullscreen-btn');
+            const enterIcon = fullscreenBtn.querySelector('.fullscreen-enter-icon');
+            const exitIcon = fullscreenBtn.querySelector('.fullscreen-exit-icon');
+            const warningMessage = document.getElementById('warning-message');
+            const customLogo = document.getElementById('custom-logo');
+            
+            function showSlide(index) {
+                slides.forEach((slide, i) => slide.classList.toggle('active', i === index));
+                
+                const progressPercentage = ((index + 1) / totalSlides) * 100;
+                progressBar.style.width = `${progressPercentage}%`;
+
+                prevBtn.style.display = (index === 0) ? 'none' : 'flex';
+                nextBtn.style.display = (index === totalSlides - 1) ? 'none' : 'flex';
+
+                clearTimeout(warningTimeout);
+                warningMessage.classList.add('opacity-0');
+                
+                if (index === totalSlides - 1) { // If it's the last slide
+                    customLogo.classList.remove('opacity-0');
+                    warningTimeout = setTimeout(() => {
+                        warningMessage.classList.remove('opacity-0');
+                    }, 4000);
+                } else {
+                    customLogo.classList.add('opacity-0');
+                }
+            }
+
+            function changeSlide(direction) {
+                currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
+                showSlide(currentSlide);
+            }
+
+            function toggleFullScreen() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => console.error(`Error: ${err.message}`));
+                } else if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+
+            prevBtn.addEventListener('click', () => changeSlide(-1));
+            nextBtn.addEventListener('click', () => changeSlide(1));
+            fullscreenBtn.addEventListener('click', toggleFullScreen);
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' && currentSlide < totalSlides - 1) changeSlide(1);
+                else if (e.key === 'ArrowLeft' && currentSlide > 0) changeSlide(-1);
+            });
+            
+            document.addEventListener('fullscreenchange', () => {
+                const isFullscreen = !!document.fullscreenElement;
+                enterIcon.style.display = isFullscreen ? 'none' : 'block';
+                exitIcon.style.display = isFullscreen ? 'block' : 'none';
+            });
+
+            document.querySelectorAll('.language-toggle').forEach(toggle => {
+                toggle.addEventListener('click', () => {
+                    const slide = toggle.closest('.slide');
+                    slide.classList.toggle('simplified-view');
+                    toggle.textContent = slide.classList.contains('simplified-view') ? 'Gunakan Bahasa Akademis' : 'Sederhanakan Bahasa';
+                });
+            });
+
+            showSlide(currentSlide);
+        });
+    </script>
+</body>
+</html>
